@@ -5,6 +5,7 @@ const PubNub = require('pubnub');
 var clparse = require('./actions/clparser');
 const http = require('http');
 const fs = require('fs');
+const pn = require('./actions/pub_nub.js');
 
 var calculateDiversity = require('./actions/pub_nub.js').bind(this);
 
