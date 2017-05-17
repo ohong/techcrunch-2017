@@ -5,11 +5,24 @@ const PubNub = require('pubnub');
 var clparse = require('./actions/clparser');
 const http = require('http');
 const fs = require('fs');
+
 const pn = require('./actions/pub_nub.js');
+
+console.log('PJS: ' + phantomjs('https://www.sequoiacap.com/people/'));
+
+  var Clarifai = require('clarifai');
+  
+  // initialize with your clientId and clientSecret
+  
+  var clar = new Clarifai.App(
+    '29KUybgXAWY3gv6_kk-jrVwn82AQQ3XIhrJZ0BhE',
+    'OSq7wUjo26Ija24_eGr8TL7cPyA965lrTOlQqswL'
+  );
+
 
 var calculateDiversity = require('./actions/pub_nub.js').bind(this);
 
-const CLARIFAI_CHANNEL = 'clarifai-channel'
+const CLARIFAI_CHANNEL = 'clarifai-channel';
 
 // when the client emits 'handshake', this listens and executes
 // console.log('whoa');
@@ -113,7 +126,34 @@ pubnub.subscribe({
   withPresence: true
 });
 
+  function get(url, cb) {
+
+  clar.models.predict('c0c0ac362b03416da06ab3fa36fb58e3', url).then(
+    function(response) {
+      console.log(response);
+      // do something with response
+      //socket.emit('res', response);
+      cb(response);
+    },
+    function(err) {
+      // there was an error
+    }
+  );
+  }
+
+
 io.on('connection', (socket) => {
+ socket.on('calculate', (url) => {
+    const images = new Promise((resolve, reject) => {
+      phantomjs(url).then(images => {
+        console.log(images);
+        images.forEach(image => {
+          get(image, (res) => {
+            socket.emit('res', clparse(res));
+          });
+        });
+      });
+
 
   socket.on('handshake', function(data) {
     phantomjs();
@@ -124,6 +164,7 @@ io.on('connection', (socket) => {
     });
     socket.on('calculate', (data) => {
       calculateDiversity(data, pubnub);
+
     });
   });
 });

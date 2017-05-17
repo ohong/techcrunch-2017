@@ -2,7 +2,8 @@ import React, { Component } from 'react';
 import constants from '../../constants/demographic.js';
 import Bar from './Bar';
 var urlRegex = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#/%?=~_|!:,.;]*[-A-Z0-9+&@#/%=~_|])/ig;
-
+var rd3 = require('react-d3');
+var PieChart = rd3.PieChart;
 
 var agemap = {
   "0-4": "baby",
@@ -47,9 +48,8 @@ export default class Results extends Component {
     constructor(props) {
       super();
 
-      this.state = {
-        url: false
-      }
+      this.state = props;
+      console.log('state: ' + JSON.stringify(props));
 
       this.handleSubmit = this.handleSubmit.bind(this);
       this.updateValue = this.updateValue.bind(this);
@@ -112,8 +112,8 @@ export default class Results extends Component {
       let us;
 
       function getEmoji(data, i) {
-        var ethnicityConstantData = constants.ethnicities.filter((item) => { return item.title === data })[0]
-        console.log(ethnicityConstantData.emojis.length);
+        var ethnicityConstantData = constants.ethnicities.filter((item) => { console.log(item.title, data); return item.title === data })[0]
+        console.log(ethnicityConstantData);
         return (
           <div key={data+i} style={this.styles.emoji}>
             {ethnicityConstantData.emojis[Math.floor(Math.random() * ethnicityConstantData.emojis.length  )] + ethnicityConstantData.tone[Math.floor(Math.random() * ethnicityConstantData.tone.length  )]}
@@ -121,9 +121,11 @@ export default class Results extends Component {
         )
       }
 
+        console.log(this.props.data.data.data);
 
-      const emojiData = shuffle([].concat.apply([], Object.keys(this.props.data.data).map((ethnicity) => {
-        quantity = this.props.data.data[ethnicity];
+      const emojiData = shuffle([].concat.apply([], Object.keys(this.props.data.data.data).map((ethnicity) => {
+        quantity = this.props.data.data.data[ethnicity];
+        console.log(ethnicity, quantity);
         if (quantity) {
           us = new Array(quantity);
           for (var i = 0; i < us.length; i++) {
@@ -136,7 +138,7 @@ export default class Results extends Component {
       return (
         <div style={{textAlign: 'center', padding: '1rem'}}>
           <h4>Ethnic Diversity</h4>
-          <Bar rating={0.80} />
+          <Bar ratingColor='green' rating={0.80} />
           {emojiData.map(getEmoji.bind(this))}
         </div>
       )
@@ -155,8 +157,8 @@ export default class Results extends Component {
         )
       }
 
-      const ageData = shuffle([].concat.apply([], Object.keys(this.props.data.age).map((age) => {
-        quantity = this.props.data.age[age];
+      const ageData = shuffle([].concat.apply([], Object.keys(this.props.data.data.age).map((age) => {
+        quantity = this.props.data.data.age[age];
         if (quantity) {
           us = new Array(quantity);
           for (var i = 0; i < us.length; i++) {
@@ -169,7 +171,7 @@ export default class Results extends Component {
       return (
         <div style={{textAlign: 'center', padding: '1rem'}}>
           <h4>Age Diversity</h4>
-          <Bar rating={0.30} />
+          <Bar ratingColor='red' rating={0.30} />
         {ageData.map(getEmoji.bind(this))}
         </div>
       )
@@ -188,8 +190,8 @@ export default class Results extends Component {
         )
       }
 
-      const genderData = shuffle([].concat.apply([], Object.keys(this.props.data.gender).map((gender) => {
-        quantity = this.props.data.gender[gender];
+      const genderData = shuffle([].concat.apply([], Object.keys(this.props.data.data.gender).map((gender) => {
+        quantity = this.props.data.data.gender[gender];
         if (quantity) {
           us = new Array(quantity);
           for (var i = 0; i < us.length; i++) {
@@ -202,9 +204,36 @@ export default class Results extends Component {
       return (
         <div style={{textAlign: 'center', padding: '1rem'}}>
           <h4>Gender Diversity</h4>
-          <Bar style={{display: 'inline-block'}} rating={0.44} />
+          <Bar style={{display: 'inline-block'}} ratingColor='yellow' rating={0.44} />
           {genderData.map(getEmoji.bind(this))}
         </div>
+      )
+    }
+
+    renderGraph() {
+      console.log('graph state: ' + this.state);
+     
+      var pieData = [];
+
+      Object.keys(this.state.data.data.age).forEach((elem) => {
+        // [elem] is the value 
+        // label is the key
+        if (this.state.data.data.age[elem] !== 0){
+          pieData.push(
+            {label: elem, value: this.state.data.data.age[elem]}
+          )
+          console.log('pieData: ' + pieData);
+        }
+      })
+
+      return (
+        <PieChart
+          data={pieData}
+          width={400}
+          height={400}
+          radius={100}
+          innerRadius={20}
+          title="Diversity, yo."/>
       )
     }
 
@@ -216,13 +245,14 @@ export default class Results extends Component {
               {this.renderEthnicity()}
             </div>
             <div style={Object.assign({}, this.styles.rowWrapper, this.styles.ageWrapper)}>
-              
               {this.renderAge()}
             </div>
             <div style={Object.assign({}, this.styles.rowWrapper, this.styles.genderWrapper)}>
               {this.renderGender()}
-              
             </div>
+
+              {this.renderGraph()}
+
           </div>
         )
     }
